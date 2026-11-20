@@ -15,6 +15,7 @@
 | M5 制作勾稽 | 核对独立清单和各类差异 | `POST /api/reconcile` | `app/modules/reconcile/service.py` | `tests/test_reconcile.py` |
 | M6 片段批次 | 打开历史批次并对原文件复跑 | `POST /api/runs` | `app/modules/runs/service.py` | `tests/test_runs.py` |
 | M7 校时复核 | 登记复核结论并下载证据 | `POST /api/review/{run_id}` | `app/modules/review/decisions.py` | `tests/test_review.py` |
+| M8 剪辑交接 | 主备轨校时后生成交接清单，最少换声、主轨优先、空档标注并按取用时长对账 | `POST /api/handover` | `app/modules/handover/planner.py` | `tests/test_handover.py`、`tests/test_handover_api.py` |
 
 ## 陷阱登记
 
@@ -39,3 +40,11 @@
 ## 对账
 
 输入 = 计入 + 隔离 + 重传及版本替换 + 空白记录 + 重复表头。按业务键全外连接，缺失一侧与数值为零分别登记。逐笔差值与总差一致。
+
+## 剪辑交接（M8）
+
+- 来源在通用声轨字段外增加 `轨道角色`（仅 `主轨`/`备轨`），外部账为三列 `声轨片段,轨道角色,外部取用(毫秒)`，样例见 `sample_data/handover.csv` 与 `handover_external.csv`。
+- 校时复用 `domain/rule.py` 的 `calibrate`，与双锚校时共用同一时钟事实；漂移、回退、覆盖越界片段进隔离。
+- 规划器 `planner.py` 先按所有片段校准起止切分基础区间，再以动态规划求全局最优，目标字典序为：**换声次数最少 → 主轨实际取用毫秒最多 → 确定性次序**。每个区间只留一路，两轨皆无的区间标 `空档` 并断开前后（不产生换声），相邻同来源切片再合并。
+- 对账以每个片段**实际取用时长**（而非片段原始时长）与外部账逐笔全外连接；`confirmable` 仅在无隔离且无账差时为真。差异未核清前 `POST .../reviews` 的「确认」被 `HANDOVER_OPEN` 拒绝；空档、隔离、账差或退回均须填意见。
+- 批次指纹 = `handover-1.0:sha256(来源):sha256(外部账)`，写入独立的 `handover_runs`/`handover_reviews` 表；同批重跑 `INSERT OR IGNORE` 不新增清单。

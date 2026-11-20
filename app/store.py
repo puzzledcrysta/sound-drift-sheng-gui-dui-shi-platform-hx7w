@@ -13,6 +13,15 @@ CREATE TABLE IF NOT EXISTS reviews (
   decision TEXT NOT NULL, note TEXT NOT NULL, changed TEXT NOT NULL,
   PRIMARY KEY(run_id,version)
 );
+CREATE TABLE IF NOT EXISTS handover_runs (
+  id TEXT PRIMARY KEY, source BLOB NOT NULL, book BLOB NOT NULL,
+  result TEXT NOT NULL, created TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS handover_reviews (
+  run_id TEXT NOT NULL REFERENCES handover_runs(id), version INTEGER NOT NULL,
+  decision TEXT NOT NULL, note TEXT NOT NULL, changed TEXT NOT NULL,
+  PRIMARY KEY(run_id,version)
+);
 """
 
 

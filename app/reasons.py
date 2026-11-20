@@ -12,3 +12,6 @@ REASONS = {
 }
 
 REASONS.update({'SOUND_ANCHOR': '锚点无效', 'SOUND_COVERAGE': '片段超出覆盖', 'SOUND_REWIND': '参考时钟回退', 'SOUND_PPM': '漂移超限', 'DATE': '日期格式无效', 'REV_BLOCKED': '较新来源尚未采信'})
+
+REASONS.update({'TRACK_ROLE': '轨道角色无效', 'HANDOVER_OPEN': '差异未核清不能确认',
+                'RECONCILE_OPEN': '外部账差异未核清', 'QUARANTINE_OPEN': '仍有隔离片段'})

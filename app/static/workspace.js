@@ -10,6 +10,8 @@ const live = byId('state');
 const action = document.querySelector('#source button[type=submit]');
 const topExport = byId('export');
 let selected = Object.hasOwn(settings.tabs, location.hash.slice(1)) ? location.hash.slice(1) : 'domain';
+// 「剪辑交接」是独立工作台，由 handover.js 接管，主脚本在该标签下让出渲染。
+export const handoverActive = () => selected === 'handover';
 let result = null;
 let inputs = {};
 let reviewVersion = 0;
@@ -91,6 +93,7 @@ function setRun(report) {
 async function render() {
   const ticket = ++renderEpoch;
   const stage = selected;
+  if (handoverActive()) return;
   byId('phase').textContent = settings.tabs[stage];
   byId('review').hidden = true;
   for (const link of links) {
@@ -173,9 +176,11 @@ async function render() {
 
 window.addEventListener('hashchange', () => {
   selected = Object.hasOwn(settings.tabs, location.hash.slice(1)) ? location.hash.slice(1) : 'domain';
+  if (handoverActive()) return;
   render();
 });
 byId('sample').addEventListener('click', async () => {
+  if (handoverActive()) return;
   const paths = ['shift', 'external'];
   try {
     const responses = await Promise.all(paths.map(name => fetch(`/api/samples/${name}`)));
@@ -210,6 +215,7 @@ for (const name of ['source','book']) {
 }
 byId('source').addEventListener('submit', async event => {
   event.preventDefault();
+  if (handoverActive()) return;
   const candidate = {};
   for (const [control,name] of [['source','data'],['book','book']]) {
     const text = byId(`${control}-csv`).value;
@@ -231,6 +237,7 @@ byId('source').addEventListener('submit', async event => {
 });
 byId('review').addEventListener('submit', async event => {
   event.preventDefault();
+  if (handoverActive()) return;
   const id = result.manifest.run_id;
   const note = byId('review-note');
   try {

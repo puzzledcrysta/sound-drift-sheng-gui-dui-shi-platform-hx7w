@@ -50,8 +50,26 @@ class Review(BaseModel):
     note: str = Field(default='',max_length=500)
 
 
+class HandoverSource(BaseModel):
+    data: CsvText | None = None
+    data_base64: EncodedCsv | None = None
+    demo: Literal['handover'] = 'handover'
+
+    def raw(self):
+        return input_bytes(self.data, self.data_base64, SAMPLE_ROOT/'handover.csv')
+
+
+class HandoverPaired(HandoverSource):
+    book: CsvText | None = None
+    book_base64: EncodedCsv | None = None
+
+    def ledger(self):
+        return input_bytes(self.book, self.book_base64, SAMPLE_ROOT/'handover_external.csv')
+
+
 def read_sample(name):
-    choices = {'shift':'shift.csv','external':'external.csv'}
+    choices = {'shift':'shift.csv','external':'external.csv',
+               'handover':'handover.csv','handover_external':'handover_external.csv'}
     if name not in choices:
         raise DataError('DEMO_UNKNOWN','没有此样例',404)
     return SAMPLE_ROOT.joinpath(choices[name]).read_bytes()
